@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Uptown Studio Lounge - Voice Assistant</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1a0f29 0%, #2d1b3d 50%, #3d2952 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 40% 80%, rgba(251, 146, 60, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: gradientShift 15s ease infinite;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background: rgba(30, 15, 45, 0.7);
+      backdrop-filter: blur(30px);
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 24px 20px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(45, 27, 61, 0.9) 0%, rgba(45, 27, 61, 0.4) 100%);
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      position: relative;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #a855f7, #ec4899, transparent);
+    }
+
+    .logo {
+      font-size: 48px;
+      margin-bottom: 8px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #c084fc, #f0abfc, #fb923c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .header p {
+      color: #d8b4fe;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .voice-section {
+      text-align: center;
+      width: 100%;
+    }
+
+    .voice-button-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 32px;
+    }
+
+    .voice-button {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      border: none;
+      color: white;
+      font-size: 56px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 20px 40px rgba(168, 85, 247, 0.5),
+                  0 0 0 0 rgba(168, 85, 247, 0.5);
+      position: relative;
+      z-index: 2;
+    }
+
+    .voice-button:active {
+      transform: scale(0.95);
+    }
+
+    .voice-button.recording {
+      animation: pulseRecording 1.5s infinite;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 20px 40px rgba(239, 68, 68, 0.5);
+    }
+
+    .voice-button.processing {
+      animation: rotate 2s linear infinite;
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+      box-shadow: 0 20px 40px rgba(251, 146, 60, 0.5);
+    }
+
+    @keyframes pulseRecording {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 20px 40px rgba(239, 68, 68, 0.5),
+                    0 0 0 0 rgba(239, 68, 68, 0.7);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 20px 40px rgba(239, 68, 68, 0.5),
+                    0 0 0 30px rgba(239, 68, 68, 0);
+      }
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .ripple {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 140px;
+      height: 140px;
+      margin-left: -70px;
+      margin-top: -70px;
+      border-radius: 50%;
+      border: 2px solid rgba(168, 85, 247, 0.5);
+      animation: rippleEffect 2s infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes rippleEffect {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    .status-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f0abfc;
+      min-height: 28px;
+      margin-bottom: 16px;
+      text-shadow: 0 2px 8px rgba(168, 85, 247, 0.5);
+    }
+
+    .status-subtext {
+      font-size: 14px;
+      color: #d8b4fe;
+      min-height: 20px;
+    }
+
+    .conversation {
+      width: 100%;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 0 20px 20px 20px;
+      margin-top: auto;
+    }
+
+    .conversation::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .conversation::-webkit-scrollbar-track {
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .conversation::-webkit-scrollbar-thumb {
+      background: rgba(168, 85, 247, 0.5);
+      border-radius: 2px;
+    }
+
+    .message {
+      margin-bottom: 16px;
+      padding: 16px;
+      border-radius: 20px;
+      animation: slideIn 0.4s ease;
+      max-width: 85%;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(147, 51, 234, 0.2));
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      margin-left: auto;
+      border-radius: 20px 20px 4px 20px;
+    }
+
+    .message.assistant {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(219, 39, 119, 0.2));
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      margin-right: auto;
+      border-radius: 20px 20px 20px 4px;
+    }
+
+    .message-header {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0.9;
+    }
+
+    .message.user .message-header {
+      color: #d8b4fe;
+      justify-content: flex-end;
+    }
+
+    .message.assistant .message-header {
+      color: #fbcfe8;
+    }
+
+    .message-text {
+      color: #fdf4ff;
+      line-height: 1.6;
+      font-size: 15px;
+      word-wrap: break-word;
+    }
+
+    .controls {
+      padding: 16px 20px 24px 20px;
+      display: flex;
+      gap: 12px;
+      background: linear-gradient(0deg, rgba(30, 15, 45, 0.9) 0%, transparent 100%);
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(88, 28, 135, 0.6);
+      color: #e9d5ff;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+      background: rgba(88, 28, 135, 0.8);
+    }
+
+    .error-overlay {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 90%;
+      background: rgba(239, 68, 68, 0.95);
+      color: white;
+      padding: 16px 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      animation: slideDown 0.3s ease;
+      display: none;
+    }
+
+    .error-overlay.show {
+      display: block;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .voice-button {
+        width: 120px;
+        height: 120px;
+        font-size: 48px;
+      }
+
+      .voice-button-wrapper .ripple {
+        width: 120px;
+        height: 120px;
+        margin-left: -60px;
+        margin-top: -60px;
+      }
+
+      .status-text {
+        font-size: 16px;
+      }
+
+      .message {
+        max-width: 90%;
+        padding: 14px;
+      }
+    }
+
+    @media (max-height: 700px) {
+      .main-content {
+        padding: 20px 20px;
+      }
+
+      .voice-button {
+        width: 110px;
+        height: 110px;
+        font-size: 44px;
+      }
+
+      .conversation {
+        max-height: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🎉</div>
+      <h1>Uptown Studio Lounge</h1>
+      <p>Your Event Planning Assistant</p>
+    </div>
+
+    <div class="main-content">
+      <div class="voice-section">
+        <div class="voice-button-wrapper">
+          <div class="ripple"></div>
+          <button 
+            class="voice-button" 
+            id="voiceButton" 
+            onclick="toggleRecording()"
+          >
+            🎤
+          </button>
+        </div>
+        <div class="status-text" id="statusText">Tap to start talking</div>
+        <div class="status-subtext" id="statusSubtext">Ask about events & pricing</div>
+      </div>
+    </div>
+
+    <div class="conversation" id="conversation">
+    </div>
+
+    <div class="controls">
+      <button class="btn" onclick="clearConversation()">
+        🗑️ Clear
+      </button>
+      <button class="btn" onclick="testVoice()">
+        🔊 Test
+      </button>
+    </div>
+  </div>
+
+  <div id="errorOverlay" class="error-overlay"></div>
+
+  <script>
+    // ========================================
+    // 🔑 CONFIGURATION - EDIT THIS SECTION
+    // ========================================
+    
+    const CONFIG = {
+      // Your OpenAI API Key - Get it from: https://platform.openai.com/api-keys
+      OPENAI_API_KEY: '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',
+      
+      // AI Voice Settings
+      VOICE_MODEL: 'tts-1',           // Options: 'tts-1' (faster) or 'tts-1-hd' (higher quality)
+      VOICE_NAME: 'nova',             // Options: 'alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'
+      VOICE_SPEED: 1.0,               // Range: 0.25 to 4.0 (1.0 is normal speed)
+      
+      // AI Response Settings
+      GPT_MODEL: 'gpt-4o-mini',       // Options: 'gpt-4o-mini' (cheap) or 'gpt-4o' (smarter)
+      MAX_TOKENS: 200,                // Maximum response length
+      TEMPERATURE: 0.7,               // Creativity (0.0 = focused, 1.0 = creative)
+      
+      // System Personality - UPTOWN STUDIO LOUNGE
+      SYSTEM_PROMPT: `You are a warm, professional event coordinator for Uptown Studio Lounge in McAllen, Texas. You help clients plan unforgettable events with enthusiasm and expertise.
+
+LOCATION & CONTACT:
+- Address: 5320 N. McColl Rd, McAllen, TX
+- Phone: (956) 562-4646
+- Website: www.uptownstudiolounge.com
+
+VENUE CAPACITY:
+- Standard: Up to 50+ guests
+- With Mezzanine: Up to 100 guests (mezzanine adds $485)
+- Modern, urban, customizable space with beautiful outdoor patio
+
+EVENTS WE SPECIALIZE IN:
+1. Small Weddings - Intimate, private ceremonies
+2. Corporate Events - Office parties, team building
+3. Birthday Parties - All ages, milestone celebrations
+4. Baby Showers - Tender, spacious celebrations
+5. Graduation Parties - Achievement celebrations
+6. Bridal Showers & Engagements
+
+SERVICE OPTIONS:
+1. Bring Your Own (BYO) - You bring food/decor, we provide space
+2. Full Service - We handle EVERYTHING (decor, food, music, coordination)
+
+PRICING (December 2025):
+- 40 guests: $2,750
+- 50 guests: $3,350
+- 75 guests: $4,725
+- 100 guests: $6,275
+Extra hours: $200 (weekdays/Sun), $300 (Sat/Dec)
+
+CLASSIC PACKAGE INCLUDES:
+- 4 hours venue access + 1 hour setup
+- Tables, chairs, linens, dinnerware
+- Appetizers and main course
+- Waitstaff and cake service
+- Decorations and centerpieces
+- Beautiful outdoor patio access
+- Bluetooth speaker for music
+
+KEY PHRASES TO USE:
+- "One unique event at a time"
+- "We're your partners in creating memorable celebrations"
+- "Celebration of a lifetime"
+- "We have you covered"
+
+TONE: Warm, enthusiastic, professional. Always encourage them to call (956) 562-4646 for consultations or visit www.uptownstudiolounge.com
+
+Keep responses conversational and concise for voice interaction. Focus on making them excited about their event!`
+    };
+
+    // ========================================
+    // DO NOT EDIT BELOW THIS LINE
+    // ========================================
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let conversationHistory = [];
+    let isRecording = false;
+
+    function validateConfig() {
+      if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY === 'YOUR_OPENAI_API_KEY_HERE') {
+        showError('⚠️ API key not configured. Please edit the HTML file and add your OpenAI API key.');
+        document.getElementById('voiceButton').disabled = true;
+        return false;
+      }
+      return true;
+    }
+
+    function updateStatus(state) {
+      const statusText = document.getElementById('statusText');
+      const statusSubtext = document.getElementById('statusSubtext');
+      
+      switch(state) {
+        case 'ready':
+          statusText.textContent = 'Ready to help!';
+          statusSubtext.textContent = 'Ask about events & pricing';
+          break;
+        case 'recording':
+          statusText.textContent = 'Listening...';
+          statusSubtext.textContent = 'Tap again to stop';
+          break;
+        case 'processing':
+          statusText.textContent = 'Processing...';
+          statusSubtext.textContent = 'Getting your answer';
+          break;
+        case 'speaking':
+          statusText.textContent = 'Speaking...';
+          statusSubtext.textContent = 'Listen to response';
+          break;
+      }
+    }
+
+    function showError(message) {
+      const overlay = document.getElementById('errorOverlay');
+      overlay.textContent = message;
+      overlay.classList.add('show');
+      
+      setTimeout(() => {
+        overlay.classList.remove('show');
+      }, 5000);
+    }
+
+    async function toggleRecording() {
+      if (!validateConfig()) return;
+
+      if (isRecording) {
+        stopRecording();
+      } else {
+        await startRecording();
+      }
+    }
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          await processAudio(audioBlob);
+          stream.getTracks().forEach(track => track.stop());
+        };
+        
+        mediaRecorder.start();
+        isRecording = true;
+        
+        const button = document.getElementById('voiceButton');
+        button.classList.add('recording');
+        button.textContent = '⏹️';
+        updateStatus('recording');
+        
+      } catch (error) {
+        console.error('Microphone error:', error);
+        showError('Could not access microphone. Please allow microphone permission.');
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        isRecording = false;
+        
+        const button = document.getElementById('voiceButton');
+        button.classList.remove('recording');
+        button.classList.add('processing');
+        button.textContent = '⏳';
+        updateStatus('processing');
+      }
+    }
+
+    async function processAudio(audioBlob) {
+      try {
+        const transcript = await speechToText(audioBlob);
+        addMessage('user', transcript);
+        
+        const aiResponse = await getAIResponse(transcript);
+        addMessage('assistant', aiResponse);
+        
+        updateStatus('speaking');
+        await textToSpeech(aiResponse);
+        
+        const button = document.getElementById('voiceButton');
+        button.classList.remove('processing');
+        button.textContent = '🎤';
+        updateStatus('ready');
+        
+      } catch (error) {
+        console.error('Processing error:', error);
+        showError('Error: ' + error.message);
+        
+        const button = document.getElementById('voiceButton');
+        button.classList.remove('processing');
+        button.textContent = '🎤';
+        updateStatus('ready');
+      }
+    }
+
+    async function speechToText(audioBlob) {
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'audio.webm');
+      formData.append('model', 'whisper-1');
+      
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}` },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Speech recognition failed');
+      }
+      
+      const data = await response.json();
+      return data.text;
+    }
+
+    async function getAIResponse(userMessage) {
+      conversationHistory.push({ role: 'user', content: userMessage });
+      
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: CONFIG.GPT_MODEL,
+          messages: [
+            { role: 'system', content: CONFIG.SYSTEM_PROMPT },
+            ...conversationHistory
+          ],
+          max_tokens: CONFIG.MAX_TOKENS,
+          temperature: CONFIG.TEMPERATURE
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'AI response failed');
+      }
+      
+      const data = await response.json();
+      const assistantMessage = data.choices[0].message.content;
+      
+      conversationHistory.push({ role: 'assistant', content: assistantMessage });
+      return assistantMessage;
+    }
+
+    async function textToSpeech(text) {
+      const response = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: CONFIG.VOICE_MODEL,
+          voice: CONFIG.VOICE_NAME,
+          input: text,
+          speed: CONFIG.VOICE_SPEED
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Voice synthesis failed');
+      }
+      
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      return new Promise((resolve, reject) => {
+        audio.onended = () => {
+          updateStatus('ready');
+          resolve();
+        };
+        audio.onerror = reject;
+        audio.play();
+      });
+    }
+
+    function addMessage(role, text) {
+      const conversationDiv = document.getElementById('conversation');
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${role}`;
+      
+      const icon = role === 'user' ? '👤' : '🎉';
+      const label = role === 'user' ? 'You' : 'Uptown';
+      
+      messageDiv.innerHTML = `
+        <div class="message-header">${icon} ${label}</div>
+        <div class="message-text">${text}</div>
+      `;
+      
+      conversationDiv.appendChild(messageDiv);
+      conversationDiv.scrollTop = conversationDiv.scrollHeight;
+    }
+
+    function clearConversation() {
+      document.getElementById('conversation').innerHTML = '';
+      conversationHistory = [];
+    }
+
+    async function testVoice() {
+      if (!validateConfig()) return;
+      
+      try {
+        updateStatus('speaking');
+        await textToSpeech('Hello! Welcome to Uptown Studio Lounge in McAllen. I'm here to help you plan the perfect event! Whether it's a wedding, birthday party, or corporate celebration, we've got you covered. How can I assist you today?');
+        updateStatus('ready');
+      } catch (error) {
+        console.error('Voice test error:', error);
+        showError('Voice test failed: ' + error.message);
+        updateStatus('ready');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      validateConfig();
+    });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (event) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+  </script>
+</body>
+</html>
