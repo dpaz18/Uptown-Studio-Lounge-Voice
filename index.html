@@ -415,8 +415,7 @@
           <div class="ripple"></div>
           <button 
             class="voice-button" 
-            id="voiceButton" 
-            onclick="toggleRecording()"
+            id="voiceButton"
           >
             🎤
           </button>
@@ -430,10 +429,10 @@
     </div>
 
     <div class="controls">
-      <button class="btn" onclick="clearConversation()">
+      <button class="btn" id="clearBtn">
         🗑️ Clear
       </button>
-      <button class="btn" onclick="testVoice()">
+      <button class="btn" id="testBtn">
         🔊 Test
       </button>
     </div>
@@ -759,7 +758,7 @@ Keep responses conversational and concise for voice interaction. Focus on making
       
       try {
         updateStatus('speaking');
-        await textToSpeech('Hello! Welcome to Uptown Studio Lounge in McAllen. I'm here to help you plan the perfect event! Whether it's a wedding, birthday party, or corporate celebration, we've got you covered. How can I assist you today?');
+        await textToSpeech('Hello! Welcome to Uptown Studio Lounge in McAllen. I am here to help you plan the perfect event! Whether it is a wedding, birthday party, or corporate celebration, we have got you covered. How can I assist you today?');
         updateStatus('ready');
       } catch (error) {
         console.error('Voice test error:', error);
@@ -768,10 +767,17 @@ Keep responses conversational and concise for voice interaction. Focus on making
       }
     }
 
+    // Event Listeners
     window.addEventListener('DOMContentLoaded', () => {
       validateConfig();
+      
+      // Add event listeners using addEventListener instead of inline onclick
+      document.getElementById('voiceButton').addEventListener('click', toggleRecording);
+      document.getElementById('clearBtn').addEventListener('click', clearConversation);
+      document.getElementById('testBtn').addEventListener('click', testVoice);
     });
 
+    // Prevent double-tap zoom on mobile
     let lastTouchEnd = 0;
     document.addEventListener('touchend', (event) => {
       const now = Date.now();
